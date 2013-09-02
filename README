@@ -1,0 +1,39 @@
+
+generateMSI
+===========
+
+UNTESTED WORK IN PROGRESS
+
+
+Copyright 2013 Lloyd K. Konneker
+
+
+About
+-----
+
+A python script that generates a .msi (MS Installer) file.
+Uses WiX toolset (which only runs on Windows, so this only runs on Windows.)
+
+
+License
+-------
+
+GPLv3+
+
+
+Requirements
+------------
+
+Requires of the machine it runs on:
+- WiX toolset installed (which requires Windows OS)
+- Python installed
+
+
+Features
+--------
+
+The scripting automates:
+- editing of the WiX input XML (simplifies it by using Python templates.)
+- calling of the WiX toolset
+
+(no big deal, but hey, what scripts are?)
