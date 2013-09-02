@@ -33,8 +33,8 @@ Postcondition:
 
 To use: 
 - edit the template map (first time: all variables, subsequent times, just the version number?)
-- copy any update app.exe to the directory
-- python generateMSI.py
+- copy any updated app.exe to the directory
+- >python generateMSI.py
 - copy the generated .msi file to your distribution chain
 
 Variables:

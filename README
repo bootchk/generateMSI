@@ -36,4 +36,17 @@ The scripting automates:
 - editing of the WiX input XML (simplifies it by using Python templates.)
 - calling of the WiX toolset
 
-(no big deal, but hey, what scripts are?)
+Capability: VERY LIMITED.
+This creates a very simple MSI, for a very simple case.
+In other words, it is hardcoded and inflexible except for a few parameters.
+The same name is used ubuiquitously for the product, company, websites, certain directories, etc.
+It also installs a fixed set of components.
+In other words: specific to a company with a single product, where the product has its own mimetype.
+
+See more description in the docstring.
+
+
+Credits
+-------
+
+I copied much of the template from http://www.codeproject.com/Tips/105638/A-quick-introduction-Create-an-MSI-installer-with by Moak.
