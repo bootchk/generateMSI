@@ -89,14 +89,23 @@ def generateMSIFromWIX(source):
     f.write(source)
     
   # invoke WiX tools in a chain through intermediate
+  WiXBinPath = "c:/Program Files/WiX Toolset v3.7/bin/"
+  candlePath = WiXBinPath + "candle"
+  lightPath = WiXBinPath + "light"
   try:
     # WiX is two tools in sequence with an intermediate file
-    call(["candle", sourceFileName])
+    result = call([candlePath, sourceFileName])
+    if not result:
+      # assert candle printed error to console
+      return
     # ask light to rename its output file from the default
-    call(["light", "-out " + outFilename + " " + intermediateFileName])
+    result = call([lightPath, " -out " + outFilename + " " + intermediateFileName])
+    if not result:
+      return
   except OSError:
     print "Is WiX toolset installed and in PATH?"
     raise
+  # TODO clean source and intermediate, but capture version number?
   print "Generated in current directory:", outFilename
 
 
@@ -105,7 +114,7 @@ def main():
   # FUTURE UI: dialog to figure out what kind of run, then futz with guid and version in template map
   
   WiXSource = createWiXSourceFromTemplate()
-  print WiXSource
+  # print WiXSource
   generateMSIFromWIX(WiXSource)
   
   

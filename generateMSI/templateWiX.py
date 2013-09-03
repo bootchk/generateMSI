@@ -20,7 +20,7 @@ OUT_FILENAME_TEMPLATE = r'''${appName}_$version.msi'''
 
 
 
-WIX_TEMPLATE = r''' <?xml version="1.0"?>
+WIX_TEMPLATE = r'''<?xml version="1.0"?>
 <?define ProductVersion = "$version"?>
 <?define ProductUpgradeCode = "$guid-111111111111"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -47,6 +47,13 @@ WIX_TEMPLATE = r''' <?xml version="1.0"?>
             <Directory Id="INSTALLDIR" Name="$appName">
                <Component Id="ApplicationFiles" Guid="$guid-222222222222">
                   <File Id="ApplicationFile1" Source="$appName.exe"/>
+                  
+                  <!-- register mimetype.  Probably not safe from conflict with existing mimetypes. -->
+                  <ProgId Id="$appName.$mimetypeExtension" Description="$appName file type">
+                     <Extension Id="$mimetypeExtension" ContentType="application/$mimetypeExtension">
+                        <Verb Id="open" Command="open" TargetFile="$appName.exe" Argument='"%1"'/>
+                     </Extension>
+                  </ProgId>
                </Component>
             </Directory>
          </Directory>
@@ -63,13 +70,6 @@ WIX_TEMPLATE = r''' <?xml version="1.0"?>
             </Directory>
          </Directory>
       </Directory>
-      
-      <!-- register mimetype.  Probably not safe from conflict with existing mimetypes. -->
-      <ProgId Id="$appName.$mimetypeExtension" Description="$appName file type">
-         <Extension Id="$mimetypeExtension" ContentType="application/$mimetypeExtension">
-            <Verb Id="open" Command="open" TargetFile="$appName.exe" Argument='"%1"'/>
-         </Extension>
-      </ProgId>
  
       <InstallExecuteSequence>
          <RemoveExistingProducts After="InstallValidate"/>
