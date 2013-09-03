@@ -7,10 +7,12 @@ Note we don't use XML variables: use templating at this level.
 TODO fix guidPrefix:  if a component is replaced, generate new GUID.
 
 In same directory, use this structure for the archive of source (in the sense: source of copy to target)
-??? 
-
 appName.exe
 appName.ico
+
+!!! Don't be fooled by the Windows Explorer: it should show the name of executable as 'appName'.
+If it shows 'appName.exe', WiX says the 'system can't find the file appName.exe'.
+Somewhere there is confusion over the suffix '.exe'
 
 '''
 
@@ -45,9 +47,9 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
         <Media Id="1" 
           Cabinet="$appName.cab" 
           EmbedCab="yes" />
-        <!-- FUTURE icon 
+        <!-- app icon -->
         <Icon Id="ProductIcon" SourceFile="$appName.ico"/>
-        -->
+        
 
         <!-- Step 1: Define the directory structure -->
         <Directory Id="TARGETDIR" Name="SourceDir">
@@ -57,7 +59,7 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
           </Directory>
           
           <Directory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuSubfolder" Name="$appName">
+            <Directory Id="ProgramMenuSubfolder" Name="$appName"/>
           </Directory>
           
         </Directory>
@@ -68,19 +70,24 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
         -->
         <DirectoryRef Id="AppRootDir">
             <Component Id="AppBinaries" Guid="$guidPrefix-222222222222">
-                <File Id="myapplication.exe" 
+                <File Id="AppExecutable" 
                   Source="$appName.exe" 
                   KeyPath="yes" Checksum="yes"/>
                   
-                <!-- register mimetype.  Probably not safe from conflict with existing mimetypes. -->
+                <!-- register mimetype.  
+                Probably not safe from conflict with existing mimetypes.
+                Note this provides default icon comprising app icon on white background.
+                More specific icon requires changes to registry.
+                -->
                 <ProgId Id="$appName.$mimetypeExtension" Description="$appName file type">
                   <Extension Id="$mimetypeExtension" ContentType="application/$mimetypeExtension">
-                     <Verb Id="open" Command="open" TargetFile="$appName.exe" Argument='"%1"'/>
+                     <Verb Id="open" Command="open" TargetFile="AppExecutable" Argument='"%1"'/>
                   </Extension>
                 </ProgId>
+                
             </Component>
             
-            <!-- FUTURE
+            <!-- FUTURE documents
             <Component Id="documentation.html" Guid="PUT-GUID-HERE">
                 <File Id="documentation.html" Source="MySourceFiles\documentation.html" KeyPath="yes"/>
             </Component>
@@ -89,8 +96,10 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
         
         <DirectoryRef Id="ProgramMenuSubfolder">
           <Component Id="AppStartMenuItem" Guid="$guidPrefix-333333333333">
-             <Shortcut Id="AppMenuShortcut" Name="$appName" Description="$appName" 
-                       Target="[AppRootDir]$appName.exe" WorkingDirectory="AppRootDir"/>
+             <Shortcut Id="AppMenuShortcut" 
+                   Name="$appName" 
+                   Description="Start $appName" 
+                   Target="[AppRootDir]$appName.exe" WorkingDirectory="AppRootDir"/>
              <RegistryValue Root="HKCU" Key="Software\$companyName\$appName" 
                        Name="installed" Type="integer" Value="1" KeyPath="yes"/>
              <RemoveFolder Id="ProgramMenuSubfolder" On="uninstall"/>
@@ -103,6 +112,7 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
         <Feature Id="AppAndShortcuts" Title="App and shortcuts" Level="1">
             <ComponentRef Id="AppBinaries" />
             <ComponentRef Id="AppStartMenuItem"/>
+            <!-- FUTURE Documents -->
             <!-- FUTURE DesktopShortcut -->
         </Feature>
     </Product>

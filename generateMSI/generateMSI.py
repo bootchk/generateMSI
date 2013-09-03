@@ -100,8 +100,14 @@ def generateMSIFromWIX(source):
       # assert candle printed error to console
       print "candle failed"
       return
-    # ask light to rename outfile from the default to name with version appended.
+    '''
+    ask light to rename outfile from the default to name with version appended.
+    Can't get this to work, so just rename it in Python.
     result = call([lightPath, " -out " + outFilename + " " + intermediateFileName])
+    '''
+    result = call([lightPath, intermediateFileName])
+    # TODO rename
+
     if result:
       print "light failed"
       return
