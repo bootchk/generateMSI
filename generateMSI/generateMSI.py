@@ -94,13 +94,16 @@ def generateMSIFromWIX(source):
   lightPath = WiXBinPath + "light"
   try:
     # WiX is two tools in sequence with an intermediate file
+    # '-out filename' is optional: will create files in current directory (not to standard out)
     result = call([candlePath, sourceFileName])
-    if not result:
+    if result:  # non-zero is error
       # assert candle printed error to console
+      print "candle failed"
       return
-    # ask light to rename its output file from the default
+    # ask light to rename outfile from the default to name with version appended.
     result = call([lightPath, " -out " + outFilename + " " + intermediateFileName])
-    if not result:
+    if result:
+      print "light failed"
       return
   except OSError:
     print "Is WiX toolset installed and in PATH?"

@@ -14,8 +14,8 @@ TEMPLATE_MAP = { \
 'mimetypeExtension' : 'pnl'
  }
 
-SOURCE_FILENAME_TEMPLATE = r'''${appName}.msc'''
-INTERMEDIATE_FILENAME_TEMPLATE = r'''${appName}.mso'''
+SOURCE_FILENAME_TEMPLATE = r'''${appName}.wxs'''
+INTERMEDIATE_FILENAME_TEMPLATE = r'''${appName}.wixobj'''
 OUT_FILENAME_TEMPLATE = r'''${appName}_$version.msi'''
 
 
@@ -43,10 +43,12 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
  
       <!-- components copied/created on install machine -->
       <Directory Id="TARGETDIR" Name="SourceDir">
+      
          <Directory Id="ProgramFilesFolder">
             <Directory Id="INSTALLDIR" Name="$appName">
                <Component Id="ApplicationFiles" Guid="$guid-222222222222">
-                  <File Id="ApplicationFile1" Source="$appName.exe"/>
+                  <!-- Use executable from current working directory. -->
+                  <File Id="ApplicationFile1" Source="./$appName.exe"/>
                   
                   <!-- register mimetype.  Probably not safe from conflict with existing mimetypes. -->
                   <ProgId Id="$appName.$mimetypeExtension" Description="$appName file type">
