@@ -2,7 +2,7 @@
 template for a WiX input file
 
 Note we don't use XML variables: use templating at this level.
-(WiX and MS Installer also have variables, called properties?)
+(WiX and MS Installer also have variables, called properties, or XML Id's)
 
 TODO fix guidPrefix:  if a component is replaced, generate new GUID.
 
@@ -18,15 +18,27 @@ Somewhere there is confusion over the suffix '.exe'
 
 # Can't user 0.0.1-beta for version???
 
+'''
+Note the GUID's must be set in dictionary before using template.
+'''
 TEMPLATE_MAP = { \
 'appName'  : 'pensool',
 'companyName' : 'Pensool.org',
 'guidPrefix' : '12345678-1234-1234-1234',
-'productGUID' : '12345678-1234-1234-1234-000000000000',
-'upgradeGUID' : '12345678-1234-1234-1234-111111111111',
+
+'upgradeGUID' : 'None',   # ids product (constant over upgrades)
+'appExecutableGUID' : 'None',
+'appStartMenuItemGUID' : 'None',
+
 'version' : '0.0.1',
 'mimetypeExtension' : 'pnl'
  }
+
+'''
+Not used:
+'productGUID' : '12345678-1234-1234-1234-000000000000',
+'''
+
 
 SOURCE_FILENAME_TEMPLATE = r'''${appName}.wxs'''
 INTERMEDIATE_FILENAME_TEMPLATE = r'''${appName}.wixobj'''
@@ -47,15 +59,22 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
         <Media Id="1" 
           Cabinet="$appName.cab" 
           EmbedCab="yes" />
-        <!-- app icon -->
-        <Icon Id="ProductIcon" SourceFile="$appName.ico"/>
+          
+        <!-- app icon 
+        I'm not sure whether the Id MUST be so: could it be 'ProductIcon' or 'ProductIcon.ico' ?
+        Is there an icon bundled in the .exe (that the app displays on its title bar)?
+        Distinct from this icon that the desktop uses to represent app and mimetype.
+        -->
+        <Icon Id="$appName.ico" SourceFile="$appName.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="$appName.ico"/>
         
 
         <!-- Step 1: Define the directory structure -->
         <Directory Id="TARGETDIR" Name="SourceDir">
           
           <Directory Id="ProgramFilesFolder">
-              <Directory Id="AppRootDir" Name="$appName"/>
+            <!-- a folder under "c:/Program Files/".  Will Windows allow without a subfolder? -->
+            <Directory Id="AppRootDir" Name="$appName"/>
           </Directory>
           
           <Directory Id="ProgramMenuFolder">
@@ -69,15 +88,17 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
         Here, source for WiX is working directory at WiX time (where WiX invoked, where .wxs is located.)
         -->
         <DirectoryRef Id="AppRootDir">
-            <Component Id="AppBinaries" Guid="$guidPrefix-222222222222">
+            <Component Id="AppBinaries" Guid="$appExecutableGUID">
                 <File Id="AppExecutable" 
                   Source="$appName.exe" 
                   KeyPath="yes" Checksum="yes"/>
                   
                 <!-- register mimetype.  
                 Probably not safe from conflict with existing mimetypes.
-                Note this provides default icon comprising app icon on white background.
+                Note this provides default icon comprising app icon on a floppy disk/document background.
                 More specific icon requires changes to registry.
+                Or ProgId.Icon attribute, advertised?
+                FUTURE this whole section pretemplated into the template, if app does not have a mimetype.
                 -->
                 <ProgId Id="$appName.$mimetypeExtension" Description="$appName file type">
                   <Extension Id="$mimetypeExtension" ContentType="application/$mimetypeExtension">
@@ -92,14 +113,17 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
                 <File Id="documentation.html" Source="MySourceFiles\documentation.html" KeyPath="yes"/>
             </Component>
             -->
+            
         </DirectoryRef>
         
         <DirectoryRef Id="ProgramMenuSubfolder">
-          <Component Id="AppStartMenuItem" Guid="$guidPrefix-333333333333">
+          <Component Id="AppStartMenuItem" Guid="$appStartMenuItemGUID">
              <Shortcut Id="AppMenuShortcut" 
                    Name="$appName" 
                    Description="Start $appName" 
-                   Target="[AppRootDir]$appName.exe" WorkingDirectory="AppRootDir"/>
+                   Target="[AppRootDir]$appName.exe" 
+                   WorkingDirectory="AppRootDir"
+                   Icon='$appName.ico' />
              <RegistryValue Root="HKCU" Key="Software\$companyName\$appName" 
                        Name="installed" Type="integer" Value="1" KeyPath="yes"/>
              <RemoveFolder Id="ProgramMenuSubfolder" On="uninstall"/>
@@ -119,6 +143,8 @@ WIX_TEMPLATE = r'''<?xml version="1.0"?>
 </Wix>
 '''
 
+
+# This is an older version, it may have a few tidbits, especially upgrades
 
 WIX_TEMPLATE_OLD = r'''<?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">

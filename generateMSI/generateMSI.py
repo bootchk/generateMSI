@@ -6,6 +6,7 @@ Where the process is 'generate an installer for Windows',
 Which is a subprocess of 'publish', a subprocess of 'develop software'.
 
 The scripting accomplishes:
+- generates GUIDs into pipe
 - edit the WiX source (so you don't have to understand WiX XML.)
 - automates calling of WiX tools
 - FUTURE parameterize with the version, etc. for redo or repeat
@@ -16,7 +17,10 @@ This creates a very simple MSI, for a very simple case.
 In other words, it is hardcoded and inflexible except for a few parameters (see below)
 The same name is used ubuiquitously for the product, company, websites, certain directories, etc.
 It also installs a fixed set of components (see below.)
-In other words: specific to a company with a single product, where the product has its own mimetype.
+In other words: use case specific to a company with a single product, where the product
+- is a single executable,
+- has its own mimetype.
+But you could change template for a different use case.
 
 Requires of the machine it runs on:
 - Windows OS
@@ -29,12 +33,13 @@ Preconditions: you have, in some directory (? same as where the script resides ?
 - edit the template map so that it describes your app
 
 Postcondition:
-- a .msi file is created (or overwritten), named for the version
+- a .msi file is created (or overwritten).  FUTURE named for the version
 
 To use: 
 - edit the template map (first time: all variables, subsequent times, just the version number?)
 - copy any updated app.exe to the directory
 - >python generateMSI.py
+- double click on generated .msi to test
 - copy the generated .msi file to your distribution chain
 
 Variables:
@@ -43,15 +48,28 @@ Variables:
 
 Components installed:
 - a single executable
+- an association of the app to its new mimetype
 - a single icon (for both the app and its mimetype)
 - a single shortcut in the start menu
-(Notably missing help files, copyright file.)
+(Notably missing: help files, copyright file, desktop shortcut)
+
+TODO
+test what happens if already installed
 
 FUTURE
-------
-You MUST leave the generated source file (.wsc ) to serve as 'database' for subsequent uses.
+======
 
-User interface on the command line (query and response.)
+args for whether to include mimetype
+------------------------------------
+
+Upgrades
+--------
+
+Repeat runs
+-----------
+You MUST leave the generated source file (.wsc ) to serve as 'database of GUID' for subsequent uses.
+
+User interface on the command line (query and response) or args
 
 Every use can be:
 - initial run for this app (requires you to cut and paste a GUID, say from guid.com)
@@ -61,6 +79,7 @@ Every use can be:
 
 '''
 from string import Template
+from uuid import uuid4
 from subprocess import call
 
 import templateWiX
@@ -73,18 +92,32 @@ def createFilename(templateString):
 
 
 def createWiXSourceFromTemplate():
-  template = Template(templateWiX.WIX_TEMPLATE)
-  return template.substitute(templateWiX.TEMPLATE_MAP)
+  generateGUIDToTemplate()
+  return Template(templateWiX.WIX_TEMPLATE).substitute(templateWiX.TEMPLATE_MAP)
+
+
+def generateGUIDToTemplate():
+  '''
+  We're profligate with UUIDs.  Read up, there's no point in conserving.
+  But we should conserve the upgradeGUID for use in upgrades (FUTURE.)
+  '''
+  templateWiX.TEMPLATE_MAP['upgradeGUID'] = getGUIDUpperCase()
+  templateWiX.TEMPLATE_MAP['appExecutableGUID'] = getGUIDUpperCase()
+  templateWiX.TEMPLATE_MAP['appStartMenuItemGUID'] = getGUIDUpperCase()
+
+
+def getGUIDUpperCase():
+  ''' Upper case UUID.  WTF it's MS innovation. '''
+  return str(uuid4()).upper()
 
 
 def generateMSIFromWIX(source):
-  
   
   outFilename = createFilename(templateWiX.OUT_FILENAME_TEMPLATE)
   sourceFileName = createFilename(templateWiX.SOURCE_FILENAME_TEMPLATE)
   intermediateFileName = createFilename(templateWiX.INTERMEDIATE_FILENAME_TEMPLATE)
   
-  # Write source xml text to file
+  # Write source xml text to file for WiX input
   with open(sourceFileName, 'w') as f:
     f.write(source)
     
@@ -102,7 +135,7 @@ def generateMSIFromWIX(source):
       return
     '''
     ask light to rename outfile from the default to name with version appended.
-    Can't get this to work, so just rename it in Python.
+    Can't get this to work, so just rename it in Python, or do it manually
     result = call([lightPath, " -out " + outFilename + " " + intermediateFileName])
     '''
     result = call([lightPath, intermediateFileName])
@@ -114,8 +147,9 @@ def generateMSIFromWIX(source):
   except OSError:
     print "Is WiX toolset installed and in PATH?"
     raise
-  # TODO clean source and intermediate, but capture version number?
-  print "Generated in current directory:", outFilename
+  # TODO clean source and intermediate? but no harm, they will be overwritten on future runs
+  # TODO but capture version number?
+  print "Generated  'appName'.msi in current directory.  You might rename it to: ", outFilename
 
 
 def main():
@@ -130,3 +164,4 @@ def main():
   
 if __name__ == '__main__':
     main()
+    
